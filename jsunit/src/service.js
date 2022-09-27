@@ -195,12 +195,21 @@ class SuiteService {
     }
 
     execute() {
-        if (this.coreContext.getDefaultService('config').filterValid.length !== 0) {
+        const configService = this.coreContext.getDefaultService('config');
+        if (configService.filterValid.length !== 0) {
             this.coreContext.fireEvents('task', 'incorrectFormat');
             return;
         }
+
+        if (configService.isRandom() && this.rootSuite.childSuites.length > 0) {
+            this.rootSuite.childSuites.sort(function () {
+                return Math.random().toFixed(1) > 0.5 ? -1 : 1;
+            });
+            this.currentRunningSuite = this.rootSuite.childSuites[0];
+        }
+
         this.coreContext.fireEvents('task', 'taskStart');
-        if (this.coreContext.getDefaultService('config').isSupportAsync()) {
+        if (configService.isSupportAsync()) {
             let asyncExecute = async () => {
                 await this.rootSuite.asyncRun(this.coreContext);
             };
@@ -298,7 +307,7 @@ SuiteService.Suite = class {
         suiteService.setCurrentRunningSuite(this);
         return new Promise(async resolve => {
             if (this.description !== '') {
-                coreContext.fireEvents('suite', 'suiteStart', this);
+                await coreContext.fireEvents('suite', 'suiteStart', this);
             }
             await this.runAsyncHookFunc('beforeAll');
             if (this.specs.length > 0) {
@@ -324,7 +333,7 @@ SuiteService.Suite = class {
 
             await this.runAsyncHookFunc('afterAll');
             if (this.description !== '') {
-                coreContext.fireEvents('suite', 'suiteDone');
+                await coreContext.fireEvents('suite', 'suiteDone');
             }
             resolve();
         });
@@ -464,7 +473,7 @@ SpecService.Spec = class {
         const config = coreContext.getDefaultService('config');
         const timeout = + (config.timeout === undefined ? 5000 : config.timeout);
         return new Promise(async resolve => {
-            coreContext.fireEvents('spec', 'specStart', this);
+            await coreContext.fireEvents('spec', 'specStart', this);
 
             function timeoutPromise() {
                 return new Promise(function (resolve, reject) {
@@ -503,7 +512,7 @@ SpecService.Spec = class {
                     this.error = e;
                 }
             }
-            coreContext.fireEvents('spec', 'specDone', this);
+            await coreContext.fireEvents('spec', 'specDone', this);
             resolve();
         });
     }
