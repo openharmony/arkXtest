@@ -39,6 +39,7 @@
 #include "i_input_event_consumer.h"
 #include "pointer_event.h"
 #include "ui_driver.h"
+#include "parse_case_int.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -136,14 +137,19 @@ namespace OHOS::uitest {
                     inFile >> buffer;
                     std::string delim = ",";
                     auto caseInfo = TestUtils::split(buffer, delim);
+                    if (caseInfo.size() <= Velocity) {
+                        continue;
+                    }
                     type = caseInfo[Type];
-                    xPosi = std::stoi(caseInfo[XPosi]);
-                    yPosi = std::stoi(caseInfo[YPosi]);
-                    x2Posi = std::stoi(caseInfo[X2Posi]);
-                    y2Posi = std::stoi(caseInfo[Y2Posi]);
-                    interval = std::stoi(caseInfo[Interval]);
-                    length = std::stoi(caseInfo[Length]);
-                    velocity = std::stoi(caseInfo[Velocity]);
+                    if (!ParseCaseInt(caseInfo[XPosi], xPosi) ||
+                        !ParseCaseInt(caseInfo[YPosi], yPosi) ||
+                        !ParseCaseInt(caseInfo[X2Posi], x2Posi) ||
+                        !ParseCaseInt(caseInfo[Y2Posi], y2Posi) ||
+                        !ParseCaseInt(caseInfo[Interval], interval) ||
+                        !ParseCaseInt(caseInfo[Length], length) ||
+                        !ParseCaseInt(caseInfo[Velocity], velocity)) {
+                        continue;
+                    }
                     if (inFile.fail()) {
                         break;
                     } else {
